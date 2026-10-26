@@ -1,0 +1,750 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Money - Personal Finance</title>
+
+<style>
+:root {
+  --purple: #5f259f;
+  --light: #f5f1fb;
+  --text: #25213a;
+  --muted: #77738a;
+  --green: #16865b;
+  --red: #d94b58;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5fa;
+  color: var(--text);
+}
+header {
+  background: var(--purple);
+  color: white;
+  padding: 22px 18px;
+}
+.header-inner, main {
+  max-width: 850px;
+  margin: auto;
+}
+header h1 { margin: 0 0 5px; }
+header p { margin: 0; opacity: .85; }
+main { padding: 18px 14px 90px; }
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 15px #2820440c;
+}
+h2 { font-size: 19px; margin: 0 0 15px; }
+h3 { margin: 0 0 8px; }
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 12px 0 6px;
+}
+input, select, button {
+  font: inherit;
+}
+input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ded9e9;
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+}
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 15px;
+  background: var(--purple);
+  color: white;
+  font-weight: 600;
+}
+button.secondary {
+  color: var(--purple);
+  background: #eee6fa;
+}
+button.danger { background: #fff0f0; color: var(--red); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.money {
+  font-size: 28px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+.muted { color: var(--muted); font-size: 13px; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.stat {
+  padding: 14px;
+  background: var(--light);
+  border-radius: 13px;
+  min-width: 0;
+}
+.stat .money { font-size: 20px; margin-top: 8px; }
+.slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.slot {
+  padding: 15px;
+  border: 1px solid #eee9f6;
+  border-radius: 14px;
+  background: white;
+  text-align: left;
+  color: var(--text);
+  min-width: 0;
+}
+.slot .emoji { font-size: 26px; }
+.slot .money { font-size: 19px; margin: 10px 0 5px; }
+.slot.active { border: 2px solid var(--purple); }
+.progress {
+  height: 7px;
+  background: #eeeaf4;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.progress div {
+  height: 100%;
+  background: var(--purple);
+  transition: width .2s;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.row > * { min-width: 0; }
+.percent-row {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  align-items: center;
+  gap: 12px;
+  margin: 15px 0;
+}
+.percent-row input { text-align: right; }
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.actions button { flex: 1; }
+.hidden { display: none !important; }
+.page-title { margin-bottom: 15px; }
+.transaction {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #eeeaf4;
+}
+.transaction:last-child { border-bottom: 0; }
+.transaction small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.credit { color: var(--green); }
+.debit { color: var(--red); }
+.notice {
+  background: #fff7df;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  box-shadow: 0 -3px 15px #28204412;
+  display: flex;
+  justify-content: center;
+  z-index: 5;
+}
+.nav-inner {
+  display: flex;
+  width: 100%;
+  max-width: 850px;
+  justify-content: space-around;
+}
+nav button {
+  color: var(--muted);
+  background: white;
+  border-radius: 0;
+  padding: 12px 10px;
+  font-size: 12px;
+  flex: 1;
+}
+nav button.active { color: var(--purple); background: #f7f2fd; }
+nav span { display: block; font-size: 20px; margin-bottom: 3px; }
+@media (max-width: 420px) {
+  .slots { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .slot { padding: 11px; }
+  .slot .money { font-size: 16px; }
+  .stats { gap: 8px; }
+  .card { padding: 14px; }
+  .percent-row { grid-template-columns: 1fr 85px; }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="header-inner">
+    <h1>Smart Money 💜</h1>
+    <p>Plan your salary. Manage your future.</p>
+  </div>
+</header>
+
+<main>
+  <!-- DASHBOARD -->
+  <section id="dashboard">
+    <div class="card">
+      <h2>Monthly salary</h2>
+      <label for="salary">Enter your monthly income (₹)</label>
+      <input id="salary" type="number" min="0" step="0.01"
+        placeholder="e.g. 30000">
+      <div class="actions">
+        <button onclick="allocateSalary()">Allocate salary</button>
+      </div>
+      <p class="muted">Allocation updates your five category balances
+        using your chosen percentages.</p>
+    </div>
+
+    <div class="card">
+      <h2>Monthly overview</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="muted">Total income</div>
+          <div class="money" id="totalIncome">₹0.00</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Total savings & funds</div>
+          <div class="money" id="totalFunds">₹0.00</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Total spent</div>
+          <div class="money" id="totalSpent">₹0.00</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Unallocated income</div>
+          <div class="money" id="unallocated">₹0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <h2>My money slots</h2>
+        <span class="muted">Tap to open</span>
+      </div>
+      <div class="slots" id="slotGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Customize your budget</h2>
+      <p class="muted">Change the percentages to suit your needs.
+        All five categories must add up to exactly 100%.</p>
+      <div id="percentInputs"></div>
+      <div class="row">
+        <strong>Total percentage</strong>
+        <strong id="percentTotal">100%</strong>
+      </div>
+      <div class="progress">
+        <div id="percentBar" style="width:100%"></div>
+      </div>
+      <div class="actions">
+        <button onclick="savePercentages()">Save percentages</button>
+        <button class="secondary" onclick="resetPercentages()">
+          Reset defaults
+        </button>
+      </div>
+      <p class="muted">Default: 25%, 10%, 15%, 15%, 35%.</p>
+    </div>
+
+    <div class="card">
+      <h2>Recent transactions</h2>
+      <div id="recentTransactions"></div>
+    </div>
+
+    <div class="notice">
+      Your data is saved in this browser on this device. This prototype
+      does not connect to your bank or perform actual UPI payments.
+      Keep your device secure.
+    </div>
+  </section>
+
+  <!-- CATEGORY DETAIL PAGE -->
+  <section id="detail" class="hidden">
+    <button class="secondary" onclick="showDashboard()">← Dashboard</button>
+
+    <div class="card" style="margin-top:16px">
+      <div class="page-title">
+        <div id="detailEmoji" style="font-size:34px"></div>
+        <h2 id="detailName">Investment</h2>
+        <div class="muted">Available category balance</div>
+        <div class="money" id="detailBalance">₹0.00</div>
+        <p class="muted" id="detailPercent">25% of monthly income</p>
+        <div class="progress"><div id="detailProgress"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Add a transaction</h2>
+      <label for="txType">Transaction type</label>
+      <select id="txType">
+        <option value="expense">Expense / Spend</option>
+        <option value="deposit">Additional deposit</option>
+      </select>
+
+      <label for="txAmount">Amount (₹)</label>
+      <input id="txAmount" type="number" min="0.01" step="0.01"
+        placeholder="Enter amount">
+
+      <label for="txNote">Description</label>
+      <input id="txNote" maxlength="100"
+        placeholder="e.g. Monthly grocery shopping">
+
+      <div class="actions">
+        <button onclick="addTransaction()">Save transaction</button>
+      </div>
+      <p class="muted">Expenses cannot exceed the available balance.
+        Deposits are recorded as additional funds.</p>
+    </div>
+
+    <div class="card">
+      <h2>Transaction history</h2>
+      <div id="categoryTransactions"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS PAGE -->
+  <section id="settings" class="hidden">
+    <div class="card">
+      <h2>Settings</h2>
+      <p>Smart Money is a budgeting and expense tracking prototype.</p>
+      <p class="muted">Your information is stored locally in this browser.
+        Clearing browser storage can erase your data.</p>
+      <button class="danger" onclick="clearData()">
+        Clear all app data
+      </button>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <div class="nav-inner">
+    <button id="navHome" class="active" onclick="showDashboard()">
+      <span>⌂</span>Home
+    </button>
+    <button id="navBudget" onclick="showBudget()">
+      <span>◉</span>Budget
+    </button>
+    <button id="navSettings" onclick="showSettings()">
+      <span>⚙️</span>Settings
+    </button>
+  </div>
+</nav>
+
+<script>
+const categories = [
+  { id: "investment", name: "Investment", emoji: "📈", pct: 25 },
+  { id: "health", name: "Health & Emergency", emoji: "❤️", pct: 10 },
+  { id: "travel", name: "Traveling", emoji: "✈️", pct: 15 },
+  { id: "personal", name: "Personal Expenses", emoji: "🛍️", pct: 15 },
+  { id: "house", name: "House Expenses", emoji: "🏠", pct: 35 }
+];
+
+const defaultPcts = [25, 10, 15, 15, 35];
+const STORAGE_KEY = "smartMoneyAppV1";
+
+function freshState() {
+  return {
+    salary: 0,
+    allocations: {},
+    transactions: [],
+    percentages: [...defaultPcts],
+    lastAllocation: ""
+  };
+}
+
+let state = freshState();
+let activeCategory = null;
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed.percentages) &&
+          parsed.percentages.length === 5 &&
+          parsed.percentages.every(x => Number.isFinite(x) && x >= 0) &&
+          parsed.allocations && Array.isArray(parsed.transactions)) {
+        state = {
+          ...freshState(),
+          ...parsed,
+          percentages: parsed.percentages
+        };
+      }
+    }
+  } catch (e) {
+    state = freshState();
+  }
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    alert("Could not save data. Check your browser storage settings.");
+  }
+}
+
+function money(value) {
+  return Number(value || 0).toLocaleString("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function getCategory(id) {
+  return categories.find(c => c.id === id);
+}
+
+function balance(id) {
+  return Number(state.allocations[id] || 0);
+}
+
+function spent(id) {
+  return state.transactions
+    .filter(t => t.category === id && t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+}
+
+function totalBalances() {
+  return categories.reduce((sum, c) => sum + balance(c.id), 0);
+}
+
+function totalSpent() {
+  return state.transactions
+    .filter(t => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+}
+
+function totalDeposits() {
+  return state.transactions
+    .filter(t => t.type === "deposit")
+    .reduce((sum, t) => sum + t.amount, 0);
+}
+
+function allocateSalary() {
+  const input = document.getElementById("salary");
+  const amount = Number(input.value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("Please enter a monthly income greater than zero.");
+    return;
+  }
+
+  if (state.percentages.reduce((a, b) => a + b, 0) !== 100) {
+    alert("Your budget percentages must add up to exactly 100%.");
+    return;
+  }
+
+  if (state.lastAllocation === new Date().toISOString().slice(0, 7)) {
+    if (!confirm("You have already allocated a salary this month. " +
+      "Allocate another amount? This adds to your existing balances.")) {
+      return;
+    }
+  }
+
+  state.salary += amount;
+  state.lastAllocation = new Date().toISOString().slice(0, 7);
+
+  categories.forEach((c, i) => {
+    const part = i === categories.length - 1
+      ? amount - categories.slice(0, -1).reduce(
+          (sum, item, j) => sum + amount * state.percentages[j] / 100, 0)
+      : amount * state.percentages[i] / 100;
+
+    state.allocations[c.id] = balance(c.id) + part;
+    state.transactions.unshift({
+      id: makeId(),
+      category: c.id,
+      type: "deposit",
+      amount: part,
+      note: "Monthly salary allocation",
+      date: new Date().toISOString()
+    });
+  });
+
+  persist();
+  renderAll();
+  alert("Salary allocated successfully!");
+}
+
+function makeId() {
+  return Date.now().toString(36) +
+    Math.random().toString(36).slice(2, 8);
+}
+
+function renderSlots() {
+  document.getElementById("slotGrid").innerHTML = categories.map((c, i) => {
+    const pct = state.percentages[i];
+    return `
+      <button class="slot" onclick="openCategory('${c.id}')">
+        <div class="emoji">${c.emoji}</div>
+        <strong>${c.name}</strong>
+        <div class="money">${money(balance(c.id))}</div>
+        <div class="muted">${pct}% of salary</div>
+        <div class="muted">Spent: ${money(spent(c.id))}</div>
+        <div class="progress">
+          <div style="width:${balance(c.id) > 0
+            ? Math.min(100, spent(c.id) / balance(c.id) * 100) : 0}%">
+          </div>
+        </div>
+      </button>`;
+  }).join("");
+}
+
+function renderPercentages() {
+  document.getElementById("percentInputs").innerHTML =
+    categories.map((c, i) => `
+      <div class="percent-row">
+        <label for="pct${i}">${c.emoji} ${c.name}</label>
+        <input id="pct${i}" type="number" min="0" max="100"
+          step="1" value="${state.percentages[i]}"
+          oninput="updatePercentTotal()">
+      </div>
+    `).join("");
+
+  updatePercentTotal();
+}
+
+function updatePercentTotal() {
+  const values = categories.map((c, i) =>
+    Number(document.getElementById("pct" + i)?.value || 0));
+
+  const valid = values.every(v => Number.isFinite(v) && v >= 0 && v <= 100);
+  const sum = values.reduce((a, b) => a + b, 0);
+
+  document.getElementById("percentTotal").textContent = sum + "%";
+  document.getElementById("percentTotal").style.color =
+    valid && sum === 100 ? "var(--green)" : "var(--red)";
+
+  document.getElementById("percentBar").style.width =
+    Math.min(100, sum) + "%";
+}
+
+function savePercentages() {
+  const values = categories.map((c, i) =>
+    Number(document.getElementById("pct" + i).value));
+
+  if (!values.every(v => Number.isFinite(v) && v >= 0 && v <= 100)) {
+    alert("Enter percentages between 0 and 100.");
+    return;
+  }
+
+  if (values.reduce((a, b) => a + b, 0) !== 100) {
+    alert("The five percentages must add up to exactly 100%.");
+    return;
+  }
+
+  state.percentages = values;
+  persist();
+  renderAll();
+  alert("Your percentages have been saved.");
+}
+
+function resetPercentages() {
+  state.percentages = [...defaultPcts];
+  persist();
+  renderAll();
+}
+
+function renderOverview() {
+  document.getElementById("totalIncome").textContent = money(state.salary);
+  document.getElementById("totalFunds").textContent = money(totalBalances());
+  document.getElementById("totalSpent").textContent = money(totalSpent());
+
+  const unallocated = Math.max(
+    0, state.salary + totalDeposits() - totalBalances() - totalSpent()
+  );
+  document.getElementById("unallocated").textContent = money(unallocated);
+}
+
+function transactionHTML(t) {
+  const c = getCategory(t.category);
+  const isExpense = t.type === "expense";
+  const sign = isExpense ? "−" : "+";
+  const title = t.note || (isExpense ? "Expense" : "Deposit");
+  const date = new Date(t.date).toLocaleString("en-IN", {
+    dateStyle: "medium", timeStyle: "short"
+  });
+
+  return `
+    <div class="transaction">
+      <div>
+        <strong>${escapeHTML(title)}</strong>
+        <small>${c ? c.emoji + " " + c.name : "Category"} · ${date}</small>
+      </div>
+      <strong class="${isExpense ? "debit" : "credit"}">
+        ${sign}${money(t.amount)}
+      </strong>
+    </div>`;
+}
+
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  })[ch]);
+}
+
+function renderTransactions() {
+  const recent = state.transactions.slice(0, 5);
+  document.getElementById("recentTransactions").innerHTML = recent.length
+    ? recent.map(transactionHTML).join("")
+    : '<p class="muted">No transactions yet. Allocate your salary to get started.</p>';
+}
+function openCategory(id) {
+  activeCategory = id;
+  const c = getCategory(id);
+  if (!c) return;
+
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("settings").classList.add("hidden");
+  document.getElementById("detail").classList.remove("hidden");
+
+  document.getElementById("detailEmoji").textContent = c.emoji;
+  document.getElementById("detailName").textContent = c.name;
+  document.getElementById("detailBalance").textContent = money(balance(id));
+  document.getElementById("detailPercent").textContent =
+    state.percentages[categories.indexOf(c)] + "% of monthly income";
+
+  document.getElementById("detailProgress").style.width =
+    (balance(id) > 0
+      ? Math.min(100, spent(id) / balance(id) * 100) : 0) + "%";
+
+  const txs = state.transactions.filter(t => t.category === id);
+  document.getElementById("categoryTransactions").innerHTML = txs.length
+    ? txs.map(transactionHTML).join("")
+    : '<p class="muted">No transactions in this category yet.</p>';
+
+  setNav("");
+  window.scrollTo(0, 0);
+}
+
+function addTransaction() {
+  if (!activeCategory) return;
+
+  const amount = Number(document.getElementById("txAmount").value);
+  const type = document.getElementById("txType").value;
+  const note = document.getElementById("txNote").value.trim();
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("Enter a valid amount greater than zero.");
+    return;
+  }
+
+  if (type === "expense" && amount > balance(activeCategory)) {
+    alert("Insufficient balance in this money slot.");
+    return;
+  }
+
+  if (type === "expense") {
+    state.allocations[activeCategory] = balance(activeCategory) - amount;
+  } else {
+    state.allocations[activeCategory] = balance(activeCategory) + amount;
+  }
+
+  state.transactions.unshift({
+    id: makeId(),
+    category: activeCategory,
+    type,
+    amount,
+    note: note || (type === "expense" ? "Expense" : "Additional deposit"),
+    date: new Date().toISOString()
+  });
+
+  document.getElementById("txAmount").value = "";
+  document.getElementById("txNote").value = "";
+
+  persist();
+  renderAll();
+  openCategory(activeCategory);
+}
+
+function showDashboard() {
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("detail").classList.add("hidden");
+  document.getElementById("settings").classList.add("hidden");
+  activeCategory = null;
+  setNav("navHome");
+  window.scrollTo(0, 0);
+}
+
+function showBudget() {
+  showDashboard();
+  document.querySelector(".card h2")?.scrollIntoView({ behavior: "smooth" });
+  document.getElementById("percentInputs").scrollIntoView({ behavior: "smooth" });
+  setNav("navBudget");
+}
+
+function showSettings() {
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("detail").classList.add("hidden");
+  document.getElementById("settings").classList.remove("hidden");
+  setNav("navSettings");
+  window.scrollTo(0, 0);
+}
+
+function setNav(active) {
+  ["navHome", "navBudget", "navSettings"].forEach(id => {
+    document.getElementById(id).classList.toggle("active", id === active);
+  });
+}
+
+function clearData() {
+  if (!confirm("Delete all balances, salary records, percentages and transactions?")) {
+    return;
+  }
+
+  state = freshState();
+  persist();
+  document.getElementById("salary").value = "";
+  renderAll();
+  showDashboard();
+}
+ function renderAll() {
+  document.getElementById("salary").value = state.salary || "";
+  renderOverview();
+  renderSlots();
+  renderPercentages();
+  renderTransactions();
+}
+
+loadState();
+renderAll();
+</script>
+</body>
+</html>
